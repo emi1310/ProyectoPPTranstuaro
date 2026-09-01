@@ -1,108 +1,54 @@
-﻿using GestionRemitosTransporte.Modelos;
+﻿using GestionRemitosTransporte.Datos;
+using Microsoft.Data.Sqlite;
 
-Cliente cliente = new Cliente(
-    1,
-    "Chiappa Cristian",
-    "Miramar, Buenos Aires",
-    "20-93245108-5",
-    "Cuenta Corriente",
-    true
-);
+Console.WriteLine("PRUEBA DE CONEXIÓN A SQLITE");
+Console.WriteLine("---------------------------");
 
-Remito remito = new Remito(
-    1,
-    "0001-00020301",
-    new DateTime(2026, 5, 23),
-    cliente,
-    "Cuenta Corriente",
-    "Remito de prueba basado en comprobante manual."
-);
-
-DetalleRemito detalle1 = new DetalleRemito(
-    1,
-    2,
-    "Bultos varios",
-    "Vignolo",
-    "0003-24773",
-    868500m,
-    21712m
-);
-
-DetalleRemito detalle2 = new DetalleRemito(
-    2,
-    15,
-    "Bultos varios",
-    "Hintercom",
-    "0003-0024993",
-    1114400m,
-    17860m
-);
-
-DetalleRemito detalle3 = new DetalleRemito(
-    3,
-    6,
-    "Bultos varios",
-    "Exult",
-    "0001-0016079",
-    712318.93m,
-    17808m
-);
-
-DetalleRemito detalle4 = new DetalleRemito(
-    4,
-    15,
-    "Bultos varios",
-    "Distelec",
-    "0001-00012393",
-    1800000m,
-    15000m
-);
-
-remito.AgregarDetalle(detalle1);
-remito.AgregarDetalle(detalle2);
-remito.AgregarDetalle(detalle3);
-remito.AgregarDetalle(detalle4);
-
-remito.MarcarComoEntregado();
-
-Console.WriteLine("SISTEMA DE GESTIÓN DE REMITOS");
-Console.WriteLine("-----------------------------");
-Console.WriteLine("Cliente: " + cliente.NombreRazonSocial);
-Console.WriteLine("Remito Nº: " + remito.NumeroRemito);
-Console.WriteLine("Fecha: " + remito.Fecha.ToShortDateString());
-Console.WriteLine("Estado del remito: " + remito.Estado);
-Console.WriteLine("Total flete del remito: $" + remito.TotalFlete);
+Console.WriteLine("Ruta de la base de datos:");
+Console.WriteLine(ConexionBD.ObtenerRutaBaseDatos());
 
 Console.WriteLine();
-Console.WriteLine("GENERACIÓN DE LIQUIDACIÓN MENSUAL");
-Console.WriteLine("---------------------------------");
 
-LiquidacionMensual liquidacion = new LiquidacionMensual(
-    1,
-    "LIQ-2026-05-0001",
-    DateTime.Today,
-    5,
-    2026,
-    cliente
-);
+using SqliteConnection conexion = ConexionBD.ObtenerConexion();
 
-liquidacion.AgregarRemito(remito);
+string consulta = @"
+SELECT 
+    idCliente,
+    nombreRazonSocial,
+    domicilio,
+    cuitDni,
+    condicionIVA,
+    tieneCuentaCorriente,
+    activo
+FROM Clientes;
+";
 
-Console.WriteLine("Liquidación Nº: " + liquidacion.NumeroLiquidacion);
-Console.WriteLine("Cliente: " + liquidacion.Cliente.NombreRazonSocial);
-Console.WriteLine("Mes facturado: " + liquidacion.MesFacturado + "/" + liquidacion.AnioFacturado);
-Console.WriteLine("Estado liquidación: " + liquidacion.Estado);
-Console.WriteLine("Subtotal: $" + liquidacion.Subtotal);
-Console.WriteLine("IVA 21%: $" + liquidacion.Iva);
-Console.WriteLine("Total: $" + liquidacion.Total);
+using SqliteCommand comando = new SqliteCommand(consulta, conexion);
+using SqliteDataReader lector = comando.ExecuteReader();
 
-Console.WriteLine();
-Console.WriteLine("EMITIENDO LIQUIDACIÓN...");
-liquidacion.EmitirLiquidacion();
+Console.WriteLine("CLIENTES ENCONTRADOS");
+Console.WriteLine("--------------------");
 
-Console.WriteLine("Estado liquidación: " + liquidacion.Estado);
-Console.WriteLine("Estado remito: " + remito.Estado);
+while (lector.Read())
+{
+    int idCliente = lector.GetInt32(0);
+    string nombreRazonSocial = lector.GetString(1);
+    string domicilio = lector.IsDBNull(2) ? "" : lector.GetString(2);
+    string cuitDni = lector.IsDBNull(3) ? "" : lector.GetString(3);
+    string condicionIVA = lector.IsDBNull(4) ? "" : lector.GetString(4);
+    bool tieneCuentaCorriente = lector.GetInt32(5) == 1;
+    bool activo = lector.GetInt32(6) == 1;
 
-Console.WriteLine();
-Console.WriteLine("Presione una tecla para finalizar...");
+    Console.WriteLine($"ID: {idCliente}");
+    Console.WriteLine($"Cliente: {nombreRazonSocial}");
+    Console.WriteLine($"Domicilio: {domicilio}");
+    Console.WriteLine($"CUIT/DNI: {cuitDni}");
+    Console.WriteLine($"Condición IVA: {condicionIVA}");
+    Console.WriteLine($"Cuenta corriente: {(tieneCuentaCorriente ? "Sí" : "No")}");
+    Console.WriteLine($"Activo: {(activo ? "Sí" : "No")}");
+    Console.WriteLine();
+}
+
+Console.WriteLine("Prueba finalizada.");
+Console.WriteLine("Presione una tecla para cerrar...");
 Console.ReadKey();

@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\PC15\\Downloads\\documento\\GestionRemitosTransporte-reserva\\GestionRemitosTransporte.csproj": {}
+    "C:\\POO\\GestionRemitosTransporte\\GestionRemitosTransporte.csproj": {}
   },
   "projects": {
-    "C:\\Users\\PC15\\Downloads\\documento\\GestionRemitosTransporte-reserva\\GestionRemitosTransporte.csproj": {
+    "C:\\POO\\GestionRemitosTransporte\\GestionRemitosTransporte.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\PC15\\Downloads\\documento\\GestionRemitosTransporte-reserva\\GestionRemitosTransporte.csproj",
+        "projectUniqueName": "C:\\POO\\GestionRemitosTransporte\\GestionRemitosTransporte.csproj",
         "projectName": "GestionRemitosTransporte",
-        "projectPath": "C:\\Users\\PC15\\Downloads\\documento\\GestionRemitosTransporte-reserva\\GestionRemitosTransporte.csproj",
-        "packagesPath": "C:\\Users\\PC15\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\PC15\\Downloads\\documento\\GestionRemitosTransporte-reserva\\obj\\",
+        "projectPath": "C:\\POO\\GestionRemitosTransporte\\GestionRemitosTransporte.csproj",
+        "packagesPath": "C:\\Users\\gafos\\.nuget\\packages\\",
+        "outputPath": "C:\\POO\\GestionRemitosTransporte\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\PC15\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\gafos\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -26,6 +26,7 @@
         },
         "frameworks": {
           "net8.0": {
+            "framework": "net8.0",
             "targetAlias": "net8.0",
             "projectReferences": {}
           }
@@ -39,11 +40,19 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "10.0.400"
       },
       "frameworks": {
         "net8.0": {
+          "framework": "net8.0",
           "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.Data.Sqlite": {
+              "target": "Package",
+              "version": "[10.0.11, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -60,7 +69,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.205/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.400/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

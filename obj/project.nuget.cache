@@ -1,8 +1,16 @@
 {
   "version": 2,
-  "dgSpecHash": "IRBgEp7XWUZ0KI4dYQS0xMWvtTJYoVXxxWVlZHi3rEl7aJ3RdFLeN42Prk8c1MOpx7Wz9Qs27eHqh0fdUz/7Rw==",
+  "dgSpecHash": "jTkkJimftm4=",
   "success": true,
-  "projectFilePath": "C:\\Users\\PC15\\Downloads\\documento\\GestionRemitosTransporte-reserva\\GestionRemitosTransporte.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "C:\\POO\\GestionRemitosTransporte\\GestionRemitosTransporte.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\gafos\\.nuget\\packages\\microsoft.data.sqlite\\10.0.11\\microsoft.data.sqlite.10.0.11.nupkg.sha512",
+    "C:\\Users\\gafos\\.nuget\\packages\\microsoft.data.sqlite.core\\10.0.11\\microsoft.data.sqlite.core.10.0.11.nupkg.sha512",
+    "C:\\Users\\gafos\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.12\\sqlitepclraw.bundle_e_sqlite3.2.1.12.nupkg.sha512",
+    "C:\\Users\\gafos\\.nuget\\packages\\sqlitepclraw.core\\2.1.12\\sqlitepclraw.core.2.1.12.nupkg.sha512",
+    "C:\\Users\\gafos\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.12\\sqlitepclraw.lib.e_sqlite3.2.1.12.nupkg.sha512",
+    "C:\\Users\\gafos\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.12\\sqlitepclraw.provider.e_sqlite3.2.1.12.nupkg.sha512",
+    "C:\\Users\\gafos\\.nuget\\packages\\system.memory\\4.5.3\\system.memory.4.5.3.nupkg.sha512"
+  ],
   "logs": []
 }
