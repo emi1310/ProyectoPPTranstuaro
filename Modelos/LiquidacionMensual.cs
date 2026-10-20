@@ -7,7 +7,10 @@ using System.Threading.Tasks;
 namespace Trastuaro_V2.Modelos
 {
     public class LiquidacionMensual
+
     {
+        public string TipoLiquidacion { get; set; } = "Mensual";
+
         public int IdLiquidacion { get; set; }
 
         public int IdCliente { get; set; }

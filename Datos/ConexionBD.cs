@@ -79,26 +79,36 @@ namespace Trastuaro_V2.Datos
                     ON DELETE CASCADE
             );
             
-            CREATE TABLE IF NOT EXISTS liquidacion_mensual
+
+                        CREATE TABLE IF NOT EXISTS liquidacion_mensual
             (
                 id_liquidacion INTEGER PRIMARY KEY AUTOINCREMENT,
                 id_cliente INTEGER NOT NULL,
-                mes INTEGER NOT NULL
-                    CHECK (mes BETWEEN 1 AND 12),
-                anio INTEGER NOT NULL
-                    CHECK (anio >= 2000),
+
+                mes INTEGER
+                    CHECK (mes IS NULL OR mes BETWEEN 1 AND 12),
+
+                anio INTEGER
+                    CHECK (anio IS NULL OR anio >= 2000),
+
                 fecha_emision TEXT NOT NULL,
+
                 total NUMERIC NOT NULL DEFAULT 0
                     CHECK (total >= 0),
-                estado TEXT NOT NULL DEFAULT 'Pendiente',
 
-                UNIQUE (id_cliente, mes, anio),
+                estado TEXT NOT NULL DEFAULT 'Abierta',
+
+                tipo_liquidacion TEXT NOT NULL DEFAULT 'Mensual'
+                    CHECK (tipo_liquidacion IN ('Mensual', 'Directa')),
 
                 FOREIGN KEY (id_cliente)
                     REFERENCES cliente (id_cliente)
                     ON UPDATE CASCADE
                     ON DELETE RESTRICT
             );
+
+
+
             CREATE TABLE IF NOT EXISTS detalle_liquidacion
             (
                 id_detalle_liquidacion INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -126,14 +136,39 @@ namespace Trastuaro_V2.Datos
 
             CREATE INDEX IF NOT EXISTS idx_cliente_cuit_dni
                 ON cliente (cuit_dni);
+
             CREATE INDEX IF NOT EXISTS idx_liquidacion_cliente_periodo
                 ON liquidacion_mensual (id_cliente, anio, mes);
+
+            CREATE UNIQUE INDEX IF NOT EXISTS ux_liquidacion_mensual_cliente_periodo
+            ON liquidacion_mensual (id_cliente, anio, mes)
+            WHERE tipo_liquidacion = 'Mensual';
 
             CREATE INDEX IF NOT EXISTS idx_detalle_liquidacion
                 ON detalle_liquidacion (id_liquidacion);
             """;
 
             comando.ExecuteNonQuery();
+            comando.CommandText =
+"""
+SELECT COUNT(*)
+FROM pragma_table_info('liquidacion_mensual')
+WHERE name = 'tipo_liquidacion';
+""";
+
+            int existeTipoLiquidacion =
+                Convert.ToInt32(comando.ExecuteScalar());
+
+            if (existeTipoLiquidacion == 0)
+            {
+                comando.CommandText =
+                """
+    ALTER TABLE liquidacion_mensual
+    ADD COLUMN tipo_liquidacion TEXT NOT NULL DEFAULT 'Mensual';
+    """;
+
+                comando.ExecuteNonQuery();
+            }
         }
     }
 }

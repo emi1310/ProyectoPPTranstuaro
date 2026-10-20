@@ -22,5 +22,27 @@ namespace Trastuaro_V2.Controllers
                 liquidacion,
                 detalles);
         }
+        public void CerrarLiquidacion( int idLiquidacion)
+        {
+            _liquidacionService.CerrarLiquidacion(idLiquidacion);
+        }
+        public LiquidacionMensual? ObtenerPorClienteYPeriodo(int idCliente,int mes,int anio)
+        {
+            return _liquidacionService
+                .ObtenerPorClienteYPeriodo( idCliente, mes, anio);
+        }
+
+        public List<LiquidacionMensual> ObtenerPorCliente(
+    int idCliente)
+        {
+            return _liquidacionService.ObtenerPorCliente(
+                idCliente);
+        }
+        public List<Remito> ObtenerRemitosPorLiquidacion(
+    int idLiquidacion)
+        {
+            return _liquidacionService.ObtenerRemitosPorLiquidacion(
+                idLiquidacion);
+        }
     }
 }

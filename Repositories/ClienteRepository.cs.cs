@@ -66,6 +66,57 @@ namespace Trastuaro_V2.Repositories
             return Convert.ToInt32(resultado);
         }
 
+        public Cliente? ObtenerPorId(int idCliente)
+        {
+            using SqliteConnection conexion =
+                ConexionBD.CrearConexion();
+
+            conexion.Open();
+
+            using SqliteCommand comando =
+                conexion.CreateCommand();
+
+            comando.CommandText =
+            """
+    SELECT
+        id_cliente,
+        nombre_razon_social,
+        domicilio,
+        cuit_dni,
+        condicion_iva,
+        tiene_cuenta_corriente,
+        activo
+    FROM cliente
+    WHERE id_cliente = $idCliente;
+    """;
+
+            comando.Parameters.AddWithValue(
+                "$idCliente",
+                idCliente);
+
+            using SqliteDataReader lector =
+                comando.ExecuteReader();
+
+            if (!lector.Read())
+            {
+                return null;
+            }
+
+            return new Cliente
+            {
+                IdCliente = lector.GetInt32(0),
+                NombreRazonSocial = lector.GetString(1),
+                Domicilio = lector.IsDBNull(2)
+                    ? string.Empty
+                    : lector.GetString(2),
+                CuitDni = lector.GetString(3),
+                CondicionIva = lector.GetString(4),
+                TieneCuentaCorriente =
+                    lector.GetInt32(5) == 1,
+                Activo =
+                    lector.GetInt32(6) == 1
+            };
+        }
         public List<Cliente> ListarActivos()
         {
             List<Cliente> clientes = new();

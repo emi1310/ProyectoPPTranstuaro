@@ -24,7 +24,7 @@ namespace Trastuaro_V2
                 return;
             }
 
-            Application.Run(new Form1());
+            Application.Run(new FormInicio());
         }
     }
 }
