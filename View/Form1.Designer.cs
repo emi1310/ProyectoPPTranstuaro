@@ -1,4 +1,11 @@
-﻿namespace Trastuaro_V2
+﻿using System;
+using System.Windows.Forms;
+
+#nullable enable
+
+namespace Trastuaro_V2
+
+    
 {
     partial class Form1 : System.Windows.Forms.Form
     {

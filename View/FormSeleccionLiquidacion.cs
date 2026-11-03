@@ -35,8 +35,8 @@ namespace Trastuaro_V2
             btnContinuar.Click += BtnContinuar_Click;
         }
         private void BtnContinuar_Click(
-     object? sender,
-     EventArgs e)
+      object? sender,
+      EventArgs e)
         {
             if (cboCliente.SelectedItem is not Cliente cliente)
             {
@@ -49,20 +49,24 @@ namespace Trastuaro_V2
                 return;
             }
 
+            Hide();
+
             if (cliente.TieneCuentaCorriente)
             {
                 using FormLiquidaciones formulario =
                     new FormLiquidaciones(cliente);
 
-                formulario.ShowDialog(this);
+                formulario.ShowDialog();
             }
             else
             {
                 using FormLiquidacionDirecta formulario =
                     new FormLiquidacionDirecta(cliente);
 
-                formulario.ShowDialog(this);
+                formulario.ShowDialog();
             }
+
+            Close();
         }
         private void CargarClientes()
         {

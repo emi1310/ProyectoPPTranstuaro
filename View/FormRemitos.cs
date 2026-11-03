@@ -10,11 +10,14 @@ namespace Trastuaro_V2
         private readonly ClienteController _clienteController;
         private readonly RemitoController _remitoController;
 
+        private readonly List<DetalleRemito> _detallesRemito = new();
+
         public FormRemitos()
         {
             InitializeComponent();
+            btnAgregarDetalle.Click += BtnAgregarDetalle_Click;
 
-            btnAbrirLiquidaciones.Click += BtnAbrirLiquidaciones_Click;
+      
 
             ClienteRepository clienteRepository = new();
             ClienteService clienteService =
@@ -28,9 +31,12 @@ namespace Trastuaro_V2
             DetalleRemitoRepository detalleRepository =
                 new();
 
+            PdfRemitoService pdfRemitoService = new();
+
             RemitoService remitoService = new(
                 remitoRepository,
-                detalleRepository);
+                detalleRepository,
+                pdfRemitoService);
 
             _remitoController = new RemitoController(remitoService);
             txtNumeroRemito.Text = _remitoController.ObtenerProximoNumero();
@@ -42,13 +48,12 @@ namespace Trastuaro_V2
 
         private void ConfigurarCombos()
         {
-            cboCliente.DropDownStyle =
-                ComboBoxStyle.DropDownList;
+            cboCliente.DropDownStyle = ComboBoxStyle.DropDown;
 
             cboCondicionPago.DropDownStyle =
                 ComboBoxStyle.DropDownList;
 
-            cboCondicionPago.Enabled = false;
+            cboCondicionPago.Enabled = true;
 
             cboCondicionPago.Items.Clear();
 
@@ -58,8 +63,7 @@ namespace Trastuaro_V2
                 "Contado"
             ]);
 
-            cboCliente.SelectedIndexChanged +=
-                CboCliente_SelectedIndexChanged;
+            cboCliente.SelectedIndexChanged +=  CboCliente_SelectedIndexChanged;
         }
 
         private void CargarClientes()
@@ -69,6 +73,36 @@ namespace Trastuaro_V2
                     .ListarClientesActivos();
 
             cboCliente.DataSource = clientes;
+           
+
+            // Primero neutralizamos el autocompletado
+            cboCliente.AutoCompleteMode =
+                AutoCompleteMode.None;
+
+            // Permitimos escribir
+            cboCliente.DropDownStyle =
+                ComboBoxStyle.DropDown;
+
+            // Creamos las sugerencias
+            AutoCompleteStringCollection sugerencias =
+                new AutoCompleteStringCollection();
+
+            sugerencias.AddRange(
+                clientes
+                    .Select(c => c.ToString())
+                    .ToArray());
+
+            // Asignamos la fuente personalizada
+            cboCliente.AutoCompleteCustomSource =
+                sugerencias;
+
+            cboCliente.AutoCompleteSource =
+                AutoCompleteSource.CustomSource;
+
+            // Finalmente activamos el autocompletado
+            cboCliente.AutoCompleteMode =
+                AutoCompleteMode.SuggestAppend;
+
 
             if (clientes.Count > 0)
             {
@@ -90,21 +124,19 @@ namespace Trastuaro_V2
             EventArgs e)
         {
             ActualizarCondicionPago();
+            _detallesRemito.Clear();
+            dgvDetallesRemito.DataSource = null;
+            lblTotalRemito.Text = "TOTAL REMITO: $ 0,00";
         }
 
         private void ActualizarCondicionPago()
         {
-            if (cboCliente.SelectedItem is not Cliente cliente)
+            if (cboCondicionPago.SelectedIndex == -1)
             {
-                cboCondicionPago.SelectedIndex = -1;
-                return;
+                cboCondicionPago.SelectedItem = "Contado";
             }
-
-            cboCondicionPago.SelectedItem =
-                cliente.TieneCuentaCorriente
-                    ? "Cuenta corriente"
-                    : "Contado";
         }
+
         private void FormRemitos_Load(object? sender, EventArgs e)
         {
         }
@@ -124,37 +156,62 @@ namespace Trastuaro_V2
                     cboCliente.Focus();
                     return;
                 }
-
+                // versión V2
+                //Remito remito = new()
+                //{
+                //    NumeroRemito = txtNumeroRemito.Text,
+                //    Fecha = DateTime.Today,
+                //    IdCliente = cliente.IdCliente,
+                //    CondicionPago = cboCondicionPago.Text,
+                //    Estado = "Pendiente"
+                //};
+                // versión V3
                 Remito remito = new()
                 {
                     NumeroRemito = txtNumeroRemito.Text,
-                    Fecha = dtpFecha.Value.Date,
+                    Fecha = DateTime.Today,
                     IdCliente = cliente.IdCliente,
-                    CondicionPago = cboCondicionPago.Text,
-                    Estado = "Pendiente"
+
+                    TipoFacturacion = cboCondicionPago.Text == "Cuenta corriente" ? TipoFacturacion.CuentaCorriente : TipoFacturacion.Contado,
+
+                    Estado = EstadoRemito.Pendiente
                 };
 
-                DetalleRemito detalle = new()
+                // int idRemito = _remitoController.RegistrarRemito(remito, detalle);
+                if (_detallesRemito.Count == 0)
                 {
-                    CantidadBultos = (int)nudCantidadBultos.Value,
-                    Descripcion = txtDescripcion.Text,
-                    ProveedorOrigen = txtProveedorOrigen.Text,
-                    NumeroRemitoOrigen = txtRemitoOrigen.Text,
-                    ValorDeclarado = nudValorDeclarado.Value,
-                    ImporteFlete = nudImporteFlete.Value
-                };
+                    throw new ArgumentException(
+                        "Debe agregar al menos un detalle al remito.");
+                }
 
-                int idRemito =
-                    _remitoController.RegistrarRemito(remito, detalle);
-                txtNumeroRemito.Text = _remitoController.ObtenerProximoNumero();
+                ResultadoRegistroRemito resultado =  _remitoController.RegistrarRemito( remito, cliente, _detallesRemito);
 
-                MessageBox.Show($"Remito {remito.NumeroRemito} guardado correctamente.","Registro exitoso",MessageBoxButtons.OK,MessageBoxIcon.Information);
-
+                if (resultado.PdfGenerado)
+                {
+                    MessageBox.Show(
+                        $"Remito {remito.NumeroRemito} guardado correctamente.\n\n" +
+                        $"PDF generado en:\n{resultado.RutaPdf}",
+                        "Registro exitoso",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show(
+                        $"Remito {remito.NumeroRemito} guardado correctamente.\n\n" +
+                        $"No se pudo generar el PDF:\n{resultado.ErrorPdf}",
+                        "Remito guardado - Advertencia PDF",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
+                
                 LimpiarFormulario();
+
             }
             catch (ArgumentException ex)
             {
                 MessageBox.Show(ex.Message,"Datos incorrectos",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+                LimpiarFormulario();
             }
             catch (Exception ex)
             {
@@ -163,10 +220,17 @@ namespace Trastuaro_V2
                     "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+                LimpiarFormulario();
             }
         }
         private void LimpiarFormulario()
         {
+            _detallesRemito.Clear();
+
+            dgvDetallesRemito.DataSource = null;
+
+            lblTotalRemito.Text = "TOTAL REMITO: $ 0,00";
+
             txtNumeroRemito.Clear();
             dtpFecha.Value = DateTime.Today;
 
@@ -183,17 +247,51 @@ namespace Trastuaro_V2
             txtNumeroRemito.Focus();
         }
 
-        private void BtnAbrirLiquidaciones_Click(
-       object? sender,
-       EventArgs e)
+        private void BtnAgregarDetalle_Click(
+    object? sender,
+    EventArgs e)
         {
-            using FormSeleccionLiquidacion formulario =
-                new FormSeleccionLiquidacion();
+            try
+            {
+                DetalleRemito detalle = new()
+                {
+                    CantidadBultos = (int)nudCantidadBultos.Value,
+                    Descripcion = txtDescripcion.Text,
+                    ProveedorOrigen = txtProveedorOrigen.Text,
+                    NumeroRemitoOrigen = txtRemitoOrigen.Text,
+                    ValorDeclarado = nudValorDeclarado.Value,
+                    ImporteFlete = nudImporteFlete.Value
+                };
 
-            formulario.ShowDialog(this);
+                _detallesRemito.Add(detalle);
+
+                decimal totalRemito = _detallesRemito.Sum( d => d.ImporteFlete);
+
+                lblTotalRemito.Text = $"TOTAL REMITO: {totalRemito:C2}";
+
+                dgvDetallesRemito.DataSource = null;
+                dgvDetallesRemito.DataSource = _detallesRemito;
+                dgvDetallesRemito.Columns["IdDetalleRemito"].Visible = false;
+                dgvDetallesRemito.Columns["IdRemito"].Visible = false;
+                dgvDetallesRemito.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+
+                nudCantidadBultos.Value = 1;
+                txtDescripcion.Clear();
+                txtProveedorOrigen.Clear();
+                txtRemitoOrigen.Clear();
+                nudValorDeclarado.Value = 0;
+                nudImporteFlete.Value = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Error al agregar detalle",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
+
     }
-
-
 
 }

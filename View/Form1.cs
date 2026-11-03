@@ -7,12 +7,14 @@ namespace Trastuaro_V2
     public partial class Form1 : Form
     {
         private readonly ClienteController _clienteController;
+        private Cliente? _clienteSeleccionado;
 
+ 
         private readonly TextBox txtNombre = new();
         private readonly TextBox txtDomicilio = new();
         private readonly TextBox txtCuitDni = new();
         private readonly ComboBox cboCondicionIva = new();
-        private readonly CheckBox chkCuentaCorriente = new();
+       
         private readonly Button btnGuardar = new();
         private readonly Button btnAbrirRemitos = new();
         private readonly DataGridView dgvClientes = new();
@@ -27,10 +29,13 @@ namespace Trastuaro_V2
 
             ConfigurarFormulario();
             CargarClientes();
+            Shown += Form1_Shown;
+
         }
 
         private void ConfigurarFormulario()
         {
+            BackColor = Color.Beige;
             Text = "Trastuaro V2 - Gestión de Clientes";
             StartPosition = FormStartPosition.CenterScreen;
             Size = new Size(1000, 650);
@@ -91,14 +96,7 @@ namespace Trastuaro_V2
 
             cboCondicionIva.SelectedIndex = 0;
 
-            // Estoy acá
-            chkCuentaCorriente.Text =
-                "Tiene cuenta corriente";
-
-            chkCuentaCorriente.AutoSize = true;
-            chkCuentaCorriente.Location =
-                new Point(530, 195);
-
+            
             btnGuardar.Text = "GUARDAR CLIENTE";
             btnGuardar.Size = new Size(200, 42);
             btnGuardar.Location = new Point(780, 175);
@@ -132,10 +130,9 @@ namespace Trastuaro_V2
             dgvClientes.AutoSizeColumnsMode =
                 DataGridViewAutoSizeColumnsMode.Fill;
 
-            dgvClientes.SelectionMode =
-                DataGridViewSelectionMode.FullRowSelect;
+            dgvClientes.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
 
-            //Acá?
+            dgvClientes.SelectionChanged +=  DgvClientes_SelectionChanged;
 
             Controls.AddRange(
             [
@@ -148,11 +145,44 @@ namespace Trastuaro_V2
                 txtCuitDni,
                 lblCondicionIva,
                 cboCondicionIva,
-                chkCuentaCorriente,
                 btnGuardar,
                 btnAbrirRemitos,
                 dgvClientes
             ]);
+        }
+
+        private void DgvClientes_SelectionChanged(
+    object? sender,
+    EventArgs e)
+        {
+            if (dgvClientes.CurrentRow?.DataBoundItem
+                is not Cliente cliente)
+            {
+                return;
+            }
+
+            _clienteSeleccionado = cliente;
+  
+
+            txtNombre.Text =
+                cliente.NombreRazonSocial;
+
+            txtDomicilio.Text =
+                cliente.Domicilio ?? string.Empty;
+
+            txtCuitDni.Text =
+                cliente.CuitDni;
+
+            cboCondicionIva.SelectedItem =
+                cliente.CondicionIva;
+
+       
+
+ 
+ 
+
+
+            btnGuardar.Text = "GUARDAR CAMBIOS";
         }
 
         private static Label CrearEtiqueta(
@@ -171,13 +201,17 @@ namespace Trastuaro_V2
         }
 
         private void BtnGuardar_Click(
-            object? sender,
-            EventArgs e)
+    object? sender,
+    EventArgs e)
         {
             try
             {
+                
                 Cliente cliente = new()
                 {
+                    IdCliente =
+                        _clienteSeleccionado?.IdCliente ?? 0,
+
                     NombreRazonSocial = txtNombre.Text,
                     Domicilio = txtDomicilio.Text,
                     CuitDni = txtCuitDni.Text,
@@ -187,22 +221,37 @@ namespace Trastuaro_V2
                             ?.ToString()
                         ?? string.Empty,
 
-                    TieneCuentaCorriente =
-                        chkCuentaCorriente.Checked,
+                  
 
                     Activo = true
                 };
 
-                int idCliente =
-                    _clienteController
-                        .RegistrarCliente(cliente);
+                if (_clienteSeleccionado == null)
+                {
+                    int idCliente =
+                        _clienteController
+                            .RegistrarCliente(cliente);
 
-                MessageBox.Show(
-                    $"Cliente registrado correctamente.\n" +
-                    $"Identificador: {idCliente}",
-                    "Registro exitoso",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                    MessageBox.Show(
+                        $"Cliente registrado correctamente.\n" +
+                        $"Identificador: {idCliente}",
+                        "Registro exitoso",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+                else
+                {
+                    _clienteController
+                        .ModificarCliente(cliente);
+
+                    MessageBox.Show(
+                        "Cliente modificado correctamente.",
+                        "Modificación exitosa",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+
+                _clienteSeleccionado = null;
 
                 LimpiarFormulario();
                 CargarClientes();
@@ -229,25 +278,39 @@ namespace Trastuaro_V2
             dgvClientes.Columns["Domicilio"].HeaderText = "Domicilio";
             dgvClientes.Columns["CuitDni"].HeaderText = "CUIT / DNI";
             dgvClientes.Columns["CondicionIva"].HeaderText = "Condición IVA";
-            dgvClientes.Columns["TieneCuentaCorriente"].HeaderText = "Cuenta corriente";
+           
             dgvClientes.Columns["Activo"].HeaderText = "Activo";
 
             dgvClientes.Columns["NombreRazonSocial"].FillWeight = 30;
             dgvClientes.Columns["Domicilio"].FillWeight = 25;
             dgvClientes.Columns["CuitDni"].FillWeight = 18;
             dgvClientes.Columns["CondicionIva"].FillWeight = 20;
-            dgvClientes.Columns["TieneCuentaCorriente"].FillWeight = 12;
+      
             dgvClientes.Columns["Activo"].FillWeight = 8;
-        }
 
-        private void LimpiarFormulario()
-        {
+            dgvClientes.ClearSelection();
+            dgvClientes.CurrentCell = null;
+
+            _clienteSeleccionado = null;
+            btnGuardar.Text = "GUARDAR CLIENTE";
+
             txtNombre.Clear();
             txtDomicilio.Clear();
             txtCuitDni.Clear();
             cboCondicionIva.SelectedIndex = 0;
-            chkCuentaCorriente.Checked = false;
+           
+        }
+
+        private void LimpiarFormulario()
+        {
+          
+            txtNombre.Clear();
+            txtDomicilio.Clear();
+            txtCuitDni.Clear();
+            cboCondicionIva.SelectedIndex = 0;
+         
             txtNombre.Focus();
+
         }
 
         private void BtnAbrirRemitos_Click(
@@ -256,6 +319,26 @@ namespace Trastuaro_V2
         {
             using FormRemitos formularioRemitos = new();
             formularioRemitos.ShowDialog();
+        }
+
+        private void Form1_Shown(
+    object? sender,
+    EventArgs e)
+        {
+            dgvClientes.ClearSelection();
+            dgvClientes.CurrentCell = null;
+
+            _clienteSeleccionado = null;
+
+            txtNombre.Clear();
+            txtDomicilio.Clear();
+            txtCuitDni.Clear();
+
+            cboCondicionIva.SelectedIndex = 0;
+         
+            btnGuardar.Text = "GUARDAR CLIENTE";
+
+            txtNombre.Focus();
         }
     }
 }

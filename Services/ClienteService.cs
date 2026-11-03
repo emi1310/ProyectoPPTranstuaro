@@ -7,9 +7,12 @@ namespace Trastuaro_V2.Services
     {
         private readonly ClienteRepository _clienteRepository;
 
+     
+
         public ClienteService(ClienteRepository clienteRepository)
         {
             _clienteRepository = clienteRepository;
+           
         }
 
         public int Agregar(Cliente cliente)
@@ -33,6 +36,26 @@ namespace Trastuaro_V2.Services
             return _clienteRepository.Agregar(cliente);
         }
 
+        public void Modificar(Cliente cliente)
+        {
+            Validar(cliente);
+
+            cliente.NombreRazonSocial =
+                cliente.NombreRazonSocial.Trim();
+
+            cliente.CuitDni =
+                cliente.CuitDni.Trim();
+
+            cliente.CondicionIva =
+                cliente.CondicionIva.Trim();
+
+            cliente.Domicilio =
+                string.IsNullOrWhiteSpace(cliente.Domicilio)
+                    ? null
+                    : cliente.Domicilio.Trim();
+
+            _clienteRepository.Modificar(cliente);
+        }
         public List<Cliente> ListarActivos()
         {
             return _clienteRepository.ListarActivos();

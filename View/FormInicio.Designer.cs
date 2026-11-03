@@ -105,7 +105,7 @@
             label1.Name = "label1";
             label1.Size = new Size(854, 50);
             label1.TabIndex = 6;
-            label1.Text = "TRASTUARO";
+            label1.Text = "TRANSTUARO";
             label1.TextAlign = ContentAlignment.MiddleCenter;
             label1.Click += label1_Click;
             // 

@@ -12,48 +12,28 @@ namespace Trastuaro_V2.Controllers
             _remitoService = remitoService;
         }
 
-        public int RegistrarRemito(
-            Remito remito,
-            DetalleRemito detalle)
+
+        //NUEVO
+        public ResultadoRegistroRemito RegistrarRemito( Remito remito, Cliente cliente, List<DetalleRemito> detalles)
         {
-            return _remitoService.Registrar(remito, detalle);
+            return _remitoService.Registrar( remito, cliente, detalles);
         }
 
-        public List<Remito> ObtenerPendientesPorClienteYPeriodo(
-            int idCliente,
-            int mes,
-            int anio)
+        public List<Remito> ObtenerPorFiltros( int idCliente, TipoFacturacion? tipoFacturacion, string estado, int? mes, int? anio)
         {
-            return _remitoService
-                .ObtenerPendientesPorClienteYPeriodo(
-                    idCliente,
-                    mes,
-                    anio);
+            return _remitoService.ObtenerPorFiltros( idCliente, tipoFacturacion, estado, mes, anio);
         }
 
-        public List<Remito> ObtenerPorClientePeriodoYEstado(
-            int idCliente,
-            int mes,
-            int anio,
-            string estado)
+        public List<Remito> ObtenerPendientesPorClienteYPeriodo( int idCliente, int mes, int anio)
         {
-            return _remitoService.ObtenerPorClientePeriodoYEstado(
-                idCliente,
-                mes,
-                anio,
-                estado);
+            return _remitoService.ObtenerPendientesPorClienteYPeriodo( idCliente, mes, anio);
         }
 
-        public List<Remito> ObtenerPendientesParaLiquidacion(
-    Cliente cliente,
-    int mes,
-    int anio)
+        public List<Remito> ObtenerPorClientePeriodoYEstado( int idCliente, int mes, int anio, string estado)
         {
-            return _remitoService.ObtenerPendientesParaLiquidacion(
-                cliente,
-                mes,
-                anio);
+            return _remitoService.ObtenerPorClientePeriodoYEstado( idCliente, mes, anio, estado);
         }
+
         public void FinalizarRemito(int idRemito)
         {
             _remitoService.Finalizar(idRemito);
@@ -70,6 +50,11 @@ namespace Trastuaro_V2.Controllers
             return _remitoService.ObtenerPorClienteYEstado(
                 idCliente,
                 estado);
+        }
+
+        public void AnularRemito( Remito remito, string motivo)
+        {
+            _remitoService.AnularRemito( remito, motivo);
         }
     }
 }

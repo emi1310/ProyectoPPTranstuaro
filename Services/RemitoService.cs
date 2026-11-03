@@ -7,87 +7,129 @@ namespace Trastuaro_V2.Services
     {
         private readonly RemitoRepository _remitoRepository;
         private readonly DetalleRemitoRepository _detalleRepository;
+        private readonly LiquidacionRepository _liquidacionRepository;
+        private readonly PdfRemitoService _pdfRemitoService;
 
-        private readonly LiquidacionMensualRepository
-    _liquidacionRepository;
 
         public RemitoService(
             RemitoRepository remitoRepository,
-            DetalleRemitoRepository detalleRepository)
+            DetalleRemitoRepository detalleRepository,
+            PdfRemitoService pdfRemitoService)
         {
             _remitoRepository = remitoRepository;
             _detalleRepository = detalleRepository;
-            _liquidacionRepository = new LiquidacionMensualRepository();
+            _liquidacionRepository = new LiquidacionRepository();
+            _pdfRemitoService = pdfRemitoService;
         }
 
-        public RemitoService(
-    RemitoRepository remitoRepository,
-    DetalleRemitoRepository detalleRepository,
-    LiquidacionMensualRepository liquidacionRepository)
+
+        //  actual / base para Transtuaro V3
+        public ResultadoRegistroRemito Registrar( Remito remito, Cliente cliente, List<DetalleRemito> detalles)
         {
-            _remitoRepository = remitoRepository;
-            _detalleRepository = detalleRepository;
-            _liquidacionRepository = liquidacionRepository;
-        }
 
-        public int Registrar(
-            Remito remito,
-            DetalleRemito detalle)
-        {
-            ValidarRemito(remito);
-            ValidarDetalle(detalle);
 
-            LiquidacionMensual? liquidacionExistente =
-    _liquidacionRepository.ObtenerPorClienteYPeriodo(
-        remito.IdCliente,
-        remito.Fecha.Month,
-        remito.Fecha.Year);
-
-            if (liquidacionExistente != null &&
-                liquidacionExistente.Estado == "Cerrada")
+            if (detalles == null || detalles.Count == 0)
             {
-                throw new InvalidOperationException(
-                    $"No se puede registrar el remito porque la liquidación de " +
-                    $"{remito.Fecha:MMMM yyyy} para este cliente ya está cerrada.");
+                throw new ArgumentException(
+                    "El remito debe contener al menos un detalle.");
             }
+
+            decimal totalFlete = detalles.Sum(d => d.ImporteFlete);
+
+            remito.TotalFlete = totalFlete;
+
+            ValidarRemito(remito);
+
+            if (remito.TipoFacturacion == TipoFacturacion.CuentaCorriente)
+            {
+                int mes = remito.Fecha.Month;
+                int anio = remito.Fecha.Year;
+
+                bool periodoCerrado =
+                    _liquidacionRepository
+                        .ExisteCuentaCorrientePorPeriodo(
+                            remito.IdCliente,
+                            mes,
+                            anio);
+
+                if (periodoCerrado)
+                {
+                    throw new InvalidOperationException(
+                        "El período seleccionado ya fue cerrado para Cuenta Corriente. " +
+                        "El remito deberá emitirse bajo modalidad Contado.");
+                }
+            }
+
+
+            foreach (DetalleRemito detalle in detalles)
+            {
+                ValidarDetalle(detalle);
+
+                detalle.Descripcion =
+                    LimpiarTextoOpcional(detalle.Descripcion);
+
+                detalle.ProveedorOrigen =
+                    LimpiarTextoOpcional(detalle.ProveedorOrigen);
+
+                detalle.NumeroRemitoOrigen =
+                    LimpiarTextoOpcional(detalle.NumeroRemitoOrigen);
+            }
+
+           
 
             remito.NumeroRemito =
                 remito.NumeroRemito.Trim();
 
-            remito.CondicionPago =
-                remito.CondicionPago.Trim();
 
-            remito.Estado =
-                string.IsNullOrWhiteSpace(remito.Estado)
-                    ? "Pendiente"
-                    : remito.Estado.Trim();
+            remito.Estado = EstadoRemito.Pendiente;
 
-            detalle.Descripcion =
-                LimpiarTextoOpcional(detalle.Descripcion);
+            remito.TotalFlete = detalles.Sum(detalle => detalle.ImporteFlete);
 
-            detalle.ProveedorOrigen =
-                LimpiarTextoOpcional(detalle.ProveedorOrigen);
+            int idRemito = _remitoRepository.Agregar(remito);
 
-            detalle.NumeroRemitoOrigen =
-                LimpiarTextoOpcional(detalle.NumeroRemitoOrigen);
+            foreach (DetalleRemito detalle in detalles)
+            {
+                detalle.IdRemito = idRemito;
 
-            // El total del remito coincide inicialmente
-            // con el importe de su único detalle.
-            remito.TotalFlete = detalle.ImporteFlete;
+                _detalleRepository.Agregar(detalle);
+            }
 
-            int idRemito =
-                _remitoRepository.Agregar(remito);
+            ResultadoRegistroRemito resultado = new()
+            {
+                IdRemito = idRemito
+            };
 
-            detalle.IdRemito = idRemito;
+            try
+            {
+                string rutaPdf =
+                    _pdfRemitoService.GenerarPdf(
+                        remito,
+                        cliente,
+                        detalles);
 
-            _detalleRepository.Agregar(detalle);
+                resultado.PdfGenerado = true;
+                resultado.RutaPdf = rutaPdf;
+            }
+            catch (Exception ex)
+            {
+                resultado.PdfGenerado = false;
+                resultado.ErrorPdf = ex.Message;
+            }
 
-            return idRemito;
+            return resultado;
         }
 
-        public List<Remito> ObtenerPorClienteYEstado(
-    int idCliente,
-    string estado)
+
+        public List<Remito> ObtenerPorFiltros( int idCliente, TipoFacturacion? tipoFacturacion, string estado, int? mes, int? anio)
+        {
+            if (idCliente <= 0)
+            {
+                throw new ArgumentException("El cliente seleccionado no es válido.");
+            }
+
+            return _remitoRepository.ObtenerPorFiltros( idCliente, tipoFacturacion, estado, mes, anio);
+        }
+        public List<Remito> ObtenerPorClienteYEstado( int idCliente, string estado)
         {
             if (idCliente <= 0)
             {
@@ -96,46 +138,34 @@ namespace Trastuaro_V2.Services
             }
 
             if (estado != "Pendiente" &&
-                estado != "En proceso" &&
+                estado != "EnProceso" &&
                 estado != "Facturado" &&
                 estado != "Todos")
             {
-                throw new ArgumentException(
-                    "El estado seleccionado no es válido.");
+                throw new ArgumentException( "El estado seleccionado no es válido.");
             }
 
-            return _remitoRepository.ObtenerPorClienteYEstado(
-                idCliente,
-                estado);
+            return _remitoRepository.ObtenerPorClienteYEstado( idCliente, estado);
         }
-        public List<Remito> ObtenerPendientesPorClienteYPeriodo(
-            int idCliente,
-            int mes,
-            int anio)
+        public List<Remito> ObtenerPendientesPorClienteYPeriodo( int idCliente, int mes, int anio)
         {
             if (idCliente <= 0)
             {
-                throw new ArgumentException(
-                    "Debe seleccionar un cliente.");
+                throw new ArgumentException( "Debe seleccionar un cliente.");
             }
 
             if (mes < 1 || mes > 12)
             {
-                throw new ArgumentException(
-                    "El mes debe estar comprendido entre 1 y 12.");
+                throw new ArgumentException( "El mes debe estar comprendido entre 1 y 12.");
             }
 
             if (anio < 2000)
             {
-                throw new ArgumentException(
-                    "El año ingresado no es válido.");
+                throw new ArgumentException( "El año ingresado no es válido.");
             }
 
             return _remitoRepository
-                .ObtenerPendientesPorClienteYPeriodo(
-                    idCliente,
-                    mes,
-                    anio);
+                .ObtenerPendientesPorClienteYPeriodo( idCliente, mes, anio);
         }
 
         public List<Remito> ObtenerPorClientePeriodoYEstado(int idCliente, int mes, int anio, string estado)
@@ -159,7 +189,7 @@ namespace Trastuaro_V2.Services
             }
 
             if (estado != "Pendiente" &&
-                estado != "En proceso" &&
+                estado != "EnProceso" &&
                 estado != "Facturado" &&
                 estado != "Todos")
             {
@@ -175,32 +205,7 @@ namespace Trastuaro_V2.Services
                     estado);
         }
 
-        public List<Remito> ObtenerPendientesParaLiquidacion(
-    Cliente cliente,
-    int mes,
-    int anio)
-        {
-            if (cliente == null)
-            {
-                throw new ArgumentNullException(nameof(cliente));
-            }
-
-            if (cliente.TieneCuentaCorriente)
-            {
-                return _remitoRepository
-                    .ObtenerPorClientePeriodoYEstado(
-                        cliente.IdCliente,
-                        mes,
-                        anio,
-                        "Pendiente");
-            }
-            else
-            {
-                return _remitoRepository
-                    .ObtenerPendientesPorCliente(
-                        cliente.IdCliente);
-            }
-        }
+  
 
         public void Finalizar(int idRemito)
         {
@@ -230,10 +235,12 @@ namespace Trastuaro_V2.Services
                     "Debe seleccionar un cliente.");
             }
 
-            if (string.IsNullOrWhiteSpace(remito.CondicionPago))
+         
+
+            if (remito.TotalFlete <= 0)
             {
                 throw new ArgumentException(
-                    "Debe indicar la condición de pago.");
+                    "El importe total del remito debe ser mayor que cero.");
             }
         }
 
@@ -256,7 +263,7 @@ namespace Trastuaro_V2.Services
             if (detalle.ImporteFlete < 0)
             {
                 throw new ArgumentException(
-                    "El importe del flete no puede ser negativo.");
+                    "El importe del flete debe no puede ser negativo.");
             }
         }
 
@@ -269,6 +276,34 @@ namespace Trastuaro_V2.Services
         public string ObtenerProximoNumero()
         {
             return _remitoRepository.ObtenerProximoNumero();
+        }
+
+        public void AnularRemito( Remito remito, string motivo)
+        {
+            if (remito == null)
+            {
+                throw new ArgumentNullException(nameof(remito));
+            }
+
+            if (remito.Estado != EstadoRemito.Pendiente)
+            {
+                throw new InvalidOperationException(
+                    "Solo se pueden anular remitos en estado Pendiente.");
+            }
+
+            if (string.IsNullOrWhiteSpace(motivo))
+            {
+                throw new ArgumentException(
+                    "Debe indicar el motivo de la anulación.");
+            }
+
+            remito.Estado = EstadoRemito.Anulado;
+            remito.FechaAnulacion = DateTime.Today;
+            remito.MotivoAnulacion = motivo.Trim();
+
+            _remitoRepository.AnularRemito( remito.IdRemito, remito.FechaAnulacion.Value, remito.MotivoAnulacion);
+
+            // Todavía falta persistirlo en Repository.
         }
     }
 }

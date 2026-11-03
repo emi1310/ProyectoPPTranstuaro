@@ -18,7 +18,6 @@ namespace Trastuaro_V2
             btnImprimir.Enabled = false;
             btnClientes.Click += BtnClientes_Click;
             btnRemitos.Click += BtnRemitos_Click;
-            btnLiquidaciones.Click += BtnLiquidaciones_Click;
             btnImprimir.Click += BtnImprimir_Click;
             btnSalir.Click += BtnSalir_Click;
         }
@@ -46,13 +45,7 @@ namespace Trastuaro_V2
 
             formulario.ShowDialog(this);
         }
-        private void BtnLiquidaciones_Click(object? sender, EventArgs e)
-        {
-            using FormSeleccionLiquidacion formulario =
-                new FormSeleccionLiquidacion();
-
-            formulario.ShowDialog(this);
-        }
+        
 
         private void BtnImprimir_Click(object? sender, EventArgs e)
         {
@@ -78,6 +71,11 @@ namespace Trastuaro_V2
                 new FormHistorialLiquidaciones();
 
             formulario.ShowDialog(this);
+        }
+
+        private void btnClientes_Click_1(object sender, EventArgs e)
+        {
+
         }
     }
 }

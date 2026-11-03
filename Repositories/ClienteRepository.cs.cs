@@ -21,7 +21,6 @@ namespace Trastuaro_V2.Repositories
                 domicilio,
                 cuit_dni,
                 condicion_iva,
-                tiene_cuenta_corriente,
                 activo
             )
             VALUES
@@ -30,7 +29,6 @@ namespace Trastuaro_V2.Repositories
                 $domicilio,
                 $cuitDni,
                 $condicionIva,
-                $cuentaCorriente,
                 $activo
             );
 
@@ -53,10 +51,7 @@ namespace Trastuaro_V2.Repositories
                 "$condicionIva",
                 cliente.CondicionIva);
 
-            comando.Parameters.AddWithValue(
-                "$cuentaCorriente",
-                cliente.TieneCuentaCorriente ? 1 : 0);
-
+         
             comando.Parameters.AddWithValue(
                 "$activo",
                 cliente.Activo ? 1 : 0);
@@ -66,6 +61,64 @@ namespace Trastuaro_V2.Repositories
             return Convert.ToInt32(resultado);
         }
 
+        public void Modificar(Cliente cliente)
+        {
+            using SqliteConnection conexion =
+                ConexionBD.CrearConexion();
+
+            conexion.Open();
+
+            using SqliteCommand comando =
+                conexion.CreateCommand();
+
+            comando.CommandText =
+            """
+    UPDATE cliente
+    SET
+        nombre_razon_social = $nombre,
+        domicilio = $domicilio,
+        cuit_dni = $cuitDni,
+        condicion_iva = $condicionIva,
+      
+        activo = $activo
+    WHERE id_cliente = $idCliente;
+    """;
+
+            comando.Parameters.AddWithValue(
+                "$nombre",
+                cliente.NombreRazonSocial);
+
+            comando.Parameters.AddWithValue(
+                "$domicilio",
+                (object?)cliente.Domicilio ?? DBNull.Value);
+
+            comando.Parameters.AddWithValue(
+                "$cuitDni",
+                cliente.CuitDni);
+
+            comando.Parameters.AddWithValue(
+                "$condicionIva",
+                cliente.CondicionIva);
+
+       
+
+            comando.Parameters.AddWithValue(
+                "$activo",
+                cliente.Activo ? 1 : 0);
+
+            comando.Parameters.AddWithValue(
+                "$idCliente",
+                cliente.IdCliente);
+
+            int filasAfectadas =
+                comando.ExecuteNonQuery();
+
+            if (filasAfectadas == 0)
+            {
+                throw new InvalidOperationException(
+                    "No se encontró el cliente que se intenta modificar.");
+            }
+        }
         public Cliente? ObtenerPorId(int idCliente)
         {
             using SqliteConnection conexion =
@@ -84,7 +137,7 @@ namespace Trastuaro_V2.Repositories
         domicilio,
         cuit_dni,
         condicion_iva,
-        tiene_cuenta_corriente,
+      
         activo
     FROM cliente
     WHERE id_cliente = $idCliente;
@@ -111,10 +164,8 @@ namespace Trastuaro_V2.Repositories
                     : lector.GetString(2),
                 CuitDni = lector.GetString(3),
                 CondicionIva = lector.GetString(4),
-                TieneCuentaCorriente =
-                    lector.GetInt32(5) == 1,
-                Activo =
-                    lector.GetInt32(6) == 1
+                Activo = lector.GetInt32(5) == 1
+
             };
         }
         public List<Cliente> ListarActivos()
@@ -134,7 +185,7 @@ namespace Trastuaro_V2.Repositories
                 domicilio,
                 cuit_dni,
                 condicion_iva,
-                tiene_cuenta_corriente,
+              
                 activo
             FROM cliente
             WHERE activo = 1
@@ -154,8 +205,8 @@ namespace Trastuaro_V2.Repositories
                         : lector.GetString(2),
                     CuitDni = lector.GetString(3),
                     CondicionIva = lector.GetString(4),
-                    TieneCuentaCorriente = lector.GetInt32(5) == 1,
-                    Activo = lector.GetInt32(6) == 1
+                  
+                    Activo = lector.GetInt32(5) == 1
                 };
 
                 clientes.Add(cliente);

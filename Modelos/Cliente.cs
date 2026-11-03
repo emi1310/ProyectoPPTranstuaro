@@ -12,7 +12,7 @@
 
         public string CondicionIva { get; set; } = string.Empty;
 
-        public bool TieneCuentaCorriente { get; set; }
+
 
         public bool Activo { get; set; } = true;
 

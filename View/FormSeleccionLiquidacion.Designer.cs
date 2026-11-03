@@ -37,7 +37,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(139, 147);
+            label1.Location = new Point(15, 28);
             label1.Margin = new Padding(4, 0, 4, 0);
             label1.Name = "label1";
             label1.Size = new Size(94, 32);
@@ -46,8 +46,10 @@
             // 
             // cboCliente
             // 
+            cboCliente.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            cboCliente.AutoCompleteSource = AutoCompleteSource.ListItems;
             cboCliente.FormattingEnabled = true;
-            cboCliente.Location = new Point(261, 150);
+            cboCliente.Location = new Point(137, 31);
             cboCliente.Margin = new Padding(4);
             cboCliente.Name = "cboCliente";
             cboCliente.Size = new Size(385, 40);
@@ -56,7 +58,7 @@
             // lblModalidad
             // 
             lblModalidad.AutoSize = true;
-            lblModalidad.Location = new Point(261, 259);
+            lblModalidad.Location = new Point(15, 112);
             lblModalidad.Margin = new Padding(4, 0, 4, 0);
             lblModalidad.Name = "lblModalidad";
             lblModalidad.Size = new Size(133, 32);
@@ -68,7 +70,7 @@
             btnContinuar.BackColor = Color.LemonChiffon;
             btnContinuar.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btnContinuar.ForeColor = SystemColors.ActiveCaptionText;
-            btnContinuar.Location = new Point(261, 388);
+            btnContinuar.Location = new Point(285, 192);
             btnContinuar.Margin = new Padding(4);
             btnContinuar.Name = "btnContinuar";
             btnContinuar.Size = new Size(237, 67);
@@ -80,7 +82,7 @@
             // 
             AutoScaleDimensions = new SizeF(13F, 32F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1040, 576);
+            ClientSize = new Size(543, 297);
             Controls.Add(btnContinuar);
             Controls.Add(lblModalidad);
             Controls.Add(cboCliente);

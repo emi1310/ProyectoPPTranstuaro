@@ -6,6 +6,7 @@ namespace Trastuaro_V2.Repositories
 {
     public class DetalleLiquidacionRepository
     {
+        /*
         public int Agregar(DetalleLiquidacion detalle)
         {
             using SqliteConnection conexion =
@@ -50,7 +51,7 @@ namespace Trastuaro_V2.Repositories
 
             return Convert.ToInt32(resultado);
         }
-
+        */
         public int Agregar(
     DetalleLiquidacion detalle,
     SqliteConnection conexion,
@@ -115,7 +116,7 @@ namespace Trastuaro_V2.Repositories
         r.numero_remito,
         r.fecha,
         r.id_cliente,
-        r.condicion_pago,
+        r.tipo_facturacion,
         r.estado,
         r.total_flete
     FROM detalle_liquidacion AS dl
@@ -142,8 +143,8 @@ namespace Trastuaro_V2.Repositories
                         Fecha = DateTime.Parse(
                             lector.GetString(2)),
                         IdCliente = lector.GetInt32(3),
-                        CondicionPago = lector.GetString(4),
-                        Estado = lector.GetString(5),
+                        TipoFacturacion =  Enum.Parse<TipoFacturacion>( lector.GetString(4)),
+                        Estado = Enum.Parse<EstadoRemito>(lector.GetString(5)),
                         TotalFlete =
                             Convert.ToDecimal(
                                 lector.GetValue(6))
@@ -154,5 +155,10 @@ namespace Trastuaro_V2.Repositories
 
             return remitos;
         }
+
+
+
+
     }
+
 }
