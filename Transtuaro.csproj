@@ -26,18 +26,4 @@
     <PackageReference Include="PDFsharp-GDI" Version="6.2.4" />
   </ItemGroup>
 
-  <!-- Archivos de la versión anterior conservados en el repositorio. -->
-  <ItemGroup>
-    <Compile Remove="Controllers\ClienteController.cs.cs" />
-    <Compile Remove="Controllers\LiquidacionMensualController.cs" />
-    <Compile Remove="Modelos\LiquidacionMensual.cs" />
-    <Compile Remove="Repositories\LiquidacionMensualRepository.cs" />
-    <Compile Remove="Services\LiquidacionMensualService.cs" />
-    <Compile Remove="View\FormLiquidacionDirecta.cs" />
-    <Compile Remove="View\FormLiquidacionDirecta.Designer.cs" />
-    <Compile Remove="View\FormLiquidaciones.cs" />
-    <Compile Remove="View\FormLiquidaciones.Designer.cs" />
-    <EmbeddedResource Remove="View\FormLiquidacionDirecta.resx" />
-    <EmbeddedResource Remove="View\FormLiquidaciones.resx" />
-  </ItemGroup>
 </Project>
